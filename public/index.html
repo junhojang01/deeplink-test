@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepLink DEMO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin: 10px;
+            min-width: 200px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 10px 20px rgba(108, 117, 125, 0.3);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: left;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .result pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .instructions {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            color: #424242;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔗 DeepLink DEMO</h1>
+        <p class="subtitle">URL Scheme을 통한 앱 실행 테스트</p>
+
+        <div class="instructions">
+            <h3>📋 사용 방법</h3>
+            <ul>
+                <li>URL Scheme을 입력하세요 (예: myapp://)</li>
+                <li>전달할 더미 데이터를 입력하세요 (선택사항)</li>
+                <li>"앱 실행" 버튼을 클릭하여 DeepLink를 테스트하세요</li>
+                <li>앱이 설치되어 있지 않으면 설치 안내가 표시됩니다</li>
+            </ul>
+        </div>
+
+        <form id="deeplinkForm">
+            <div class="form-group">
+                <label for="scheme">URL Scheme:</label>
+                <input type="text" id="scheme" name="scheme" value="myapp://" placeholder="예: myapp://" required>
+            </div>
+
+            <div class="form-group">
+                <label for="data">더미 데이터 (JSON 형식):</label>
+                <textarea id="data" name="data" placeholder='{"userId": "test123", "action": "login"}'></textarea>
+            </div>
+
+            <button type="submit" class="btn">📱 앱 실행</button>
+            <button type="button" class="btn btn-secondary" onclick="testAppInstall()">📥 앱 설치 테스트</button>
+        </form>
+
+        <div id="alert" class="alert"></div>
+
+        <div id="result" class="result">
+            <h3>📊 결과</h3>
+            <pre id="resultContent"></pre>
+        </div>
+    </div>
+
+    <script>
+        let appInstalled = false;
+        let fallbackTimer = null;
+
+        // 폼 제출 처리
+        document.getElementById('deeplinkForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const scheme = document.getElementById('scheme').value;
+            const data = document.getElementById('data').value;
+
+            executeDeepLink(scheme, data);
+        });
+
+        // DeepLink 실행 함수
+        function executeDeepLink(scheme, data) {
+            hideAlert();
+            hideResult();
+
+            // 더미 데이터가 있으면 서버에서 처리
+            if (data.trim()) {
+                try {
+                    JSON.parse(data); // JSON 유효성 검사
+                    fetchDeepLinkData(scheme, data);
+                } catch (error) {
+                    showAlert('더미 데이터가 올바른 JSON 형식이 아닙니다.', 'error');
+                    return;
+                }
+            } else {
+                // 직접 DeepLink 실행
+                performDeepLink(scheme);
+            }
+        }
+
+        // 서버에서 DeepLink 데이터 가져오기
+        async function fetchDeepLinkData(scheme, data) {
+            try {
+                const response = await fetch(`/api/deeplink?scheme=${encodeURIComponent(scheme)}&data=${encodeURIComponent(data)}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    showResult(result);
+                    // 서버에서 받은 데이터로 DeepLink 실행
+                    const deepLinkUrl = `${scheme}?data=${encodeURIComponent(JSON.stringify(result.data))}`;
+                    performDeepLink(deepLinkUrl);
+                } else {
+                    showAlert('DeepLink 데이터를 가져오는데 실패했습니다.', 'error');
+                }
+            } catch (error) {
+                showAlert('서버와 통신 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 실제 DeepLink 실행
+        function performDeepLink(url) {
+            appInstalled = false;
+
+            // 앱이 설치되어 있는지 확인하기 위한 타이머 설정
+            fallbackTimer = setTimeout(() => {
+                if (!appInstalled) {
+                    showAppInstallAlert();
+                }
+            }, 2000);
+
+            // DeepLink 실행
+            window.location.href = url;
+
+            // 페이지 포커스 이벤트로 앱 실행 확인
+            window.addEventListener('blur', () => {
+                appInstalled = true;
+                clearTimeout(fallbackTimer);
+                showAlert('앱이 성공적으로 실행되었습니다!', 'success');
+            });
+
+            // 페이지 포커스 복귀 시 타이머 정리
+            window.addEventListener('focus', () => {
+                clearTimeout(fallbackTimer);
+            });
+        }
+
+        // 앱 설치 안내 표시
+        function showAppInstallAlert() {
+            const alertDiv = document.getElementById('alert');
+            alertDiv.innerHTML = `
+                <strong>📱 앱이 설치되어 있지 않습니다!</strong><br>
+                앱을 설치하시려면 아래 버튼을 클릭하세요.<br>
+                <button class="btn" onclick="goToAppStore()" style="margin-top: 10px;">앱스토어로 이동</button>
+            `;
+            alertDiv.className = 'alert alert-error show';
+        }
+
+        // 앱 설치 테스트 함수
+        function testAppInstall() {
+            showAppInstallAlert();
+        }
+
+        // 앱스토어로 이동
+        function goToAppStore() {
+            // 실제 앱스토어 URL로 변경하세요
+            window.open('https://apps.apple.com', '_blank');
+        }
+
+        // 결과 표시
+        function showResult(data) {
+            const resultDiv = document.getElementById('result');
+            const contentDiv = document.getElementById('resultContent');
+
+            contentDiv.textContent = JSON.stringify(data, null, 2);
+            resultDiv.classList.add('show');
+        }
+
+        // 결과 숨기기
+        function hideResult() {
+            document.getElementById('result').classList.remove('show');
+        }
+
+        // 알림 표시
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('alert');
+            alertDiv.innerHTML = message;
+            alertDiv.className = `alert alert-${type} show`;
+        }
+
+        // 알림 숨기기
+        function hideAlert() {
+            document.getElementById('alert').classList.remove('show');
+        }
+
+        // 페이지 로드 시 기본 설정
+        document.addEventListener('DOMContentLoaded', function () {
+            // URL 파라미터에서 scheme과 data 가져오기
+            const urlParams = new URLSearchParams(window.location.search);
+            const scheme = urlParams.get('scheme');
+            const data = urlParams.get('data');
+
+            if (scheme) {
+                document.getElementById('scheme').value = scheme;
+            }
+            if (data) {
+                document.getElementById('data').value = data;
+            }
+        });
+    </script>
+</body>
+
+</html>
